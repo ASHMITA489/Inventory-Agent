@@ -1,0 +1,26 @@
+{
+  "sku": "P0001",
+  "current_inventory": 195.0,
+  "forecast": {
+    "t+1": 95.23,
+    "t+2": 98.45,
+    "t+3": 102.10,
+    "t+4": 105.32,
+    "t+5": 98.76,
+    "t+6": 101.89,
+    "t+7": 107.45
+  },
+  "days_to_stockout": 2,
+  "risk_level": "HIGH",
+  "reorder_needed": true,
+  "recommended_reorder_quantity": 159.94,
+  "daily_sales_history": [102, 95, 110, 98, 105, 103, 108, 97, 112, 99, 106, 104, 101, 109],
+  "metadata": {
+    "lead_time_days": 3,
+    "safety_stock": 59.16,
+    "reorder_point": 354.94,
+    "lead_time_demand": 295.78,
+    "inventory_coverage_days": 1.9
+  }
+}
+
