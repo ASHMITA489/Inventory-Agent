@@ -69,8 +69,8 @@ Please provide a detailed, expert analysis based on the context data above. Use 
     
     # Call Groq API
     try:
-        # Try llama3-8b-8192 first, fallback to deepseek-r1
-        model = "llama-3.1-8b-instant"  # Updated model name
+        # Primary model: Llama 3.1 8B (fast and accurate)
+        model = "llama-3.1-8b-instant"
         
         response = client.chat.completions.create(
             model=model,
