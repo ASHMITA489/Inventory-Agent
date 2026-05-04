@@ -1,8 +1,3 @@
-"""
-AI Agent Module for Inventory Intelligence
-Uses Groq LLM to generate contextually accurate responses based on inventory and forecast data.
-"""
-
 import os
 import json
 from typing import Dict, Any
@@ -10,16 +5,6 @@ from groq import Groq
 
 
 def run_agent(user_query: str, context: dict) -> str:
-    """
-    Generate AI-powered response to user query based on inventory context.
-    
-    Args:
-        user_query: User's question about inventory/forecast
-        context: Dictionary containing SKU inventory and forecast data
-        
-    Returns:
-        str: AI-generated response based on context
-    """
     # Validate context
     if not context or 'sku' not in context:
         return "Error: Invalid context provided. Missing SKU information."
@@ -47,12 +32,20 @@ CRITICAL RULES:
 6. Give actionable recommendations based on the provided metrics.
 7. Analyze trends when sales history is available.
 8. Be concise but comprehensive - avoid generic responses.
+9. ALWAYS reference the product name, category, SKU, and region when relevant in your responses.
 
 Your responses should be:
 - Contextually accurate (use exact numbers from context)
 - Actionable (provide specific recommendations)
 - Insightful (explain the "why" behind the data)
 - Professional (suitable for supply chain managers)
+- Product-aware (always mention product name, category, and SKU when relevant)
+
+When analyzing:
+- Start by identifying the product (e.g., "For [Product Name] (SKU: [SKU], Category: [Category])...")
+- Consider product category when giving recommendations (e.g., "For [Category] products, seasonal demand patterns...")
+- Reference product-specific factors (category, region, price) when relevant
+- Use product information to provide more contextual insights
 
 Format your response clearly with proper structure."""
     
@@ -112,42 +105,40 @@ Please provide a detailed, expert analysis based on the context data above. Use 
 
 
 def format_context_for_llm(context: dict) -> str:
-    """
-    Format context dictionary into a readable string for the LLM.
-    
-    Args:
-        context: Context dictionary
-        
-    Returns:
-        str: Formatted context string
-    """
     lines = []
+    
+    # Product Information (NEW - prominently displayed)
+    lines.append(f"Product Name: {context.get('product_name', context.get('sku', 'N/A'))}")
     lines.append(f"SKU: {context.get('sku', 'N/A')}")
+    lines.append(f"Category: {context.get('category', 'Unknown')}")
+    lines.append(f"Region: {context.get('region', 'Unknown')}")
+    if context.get('current_price'):
+        lines.append(f"Current Price: ${context.get('current_price', 0):.2f}")
+    
+    # Inventory Status
+    lines.append("\nINVENTORY STATUS:")
     lines.append(f"Current Inventory: {context.get('current_inventory', 0):.2f} units")
+    lines.append(f"Days to Stockout: {context.get('days_to_stockout', 'N/A')}")
+    lines.append(f"Risk Level: {context.get('risk_level', 'N/A')}")
+    lines.append(f"Reorder Needed: {'Yes' if context.get('reorder_needed', False) else 'No'}")
+    
+    if context.get('reorder_needed'):
+        lines.append(f"Recommended Reorder Quantity: {context.get('recommended_reorder_quantity', 0):.2f} units")
     
     # Forecast data
     forecast = context.get('forecast', {})
     if forecast:
-        lines.append("\n7-Day Demand Forecast:")
+        lines.append("\n7-DAY DEMAND FORECAST:")
         for day, value in forecast.items():
             lines.append(f"  {day}: {value:.2f} units")
         total_forecast = sum(forecast.values())
         lines.append(f"  Total (7-day): {total_forecast:.2f} units")
         lines.append(f"  Average daily: {total_forecast/7:.2f} units/day")
     
-    # Inventory metrics
-    lines.append(f"\nInventory Metrics:")
-    lines.append(f"  Days to Stockout: {context.get('days_to_stockout', 'N/A')}")
-    lines.append(f"  Risk Level: {context.get('risk_level', 'N/A')}")
-    lines.append(f"  Reorder Needed: {'Yes' if context.get('reorder_needed', False) else 'No'}")
-    
-    if context.get('reorder_needed'):
-        lines.append(f"  Recommended Reorder Quantity: {context.get('recommended_reorder_quantity', 0):.2f} units")
-    
     # Sales history
     daily_sales = context.get('daily_sales_history', [])
     if daily_sales:
-        lines.append(f"\nRecent Sales History (last {len(daily_sales)} days):")
+        lines.append(f"\nRECENT SALES HISTORY (last {len(daily_sales)} days):")
         if len(daily_sales) <= 14:
             lines.append(f"  {daily_sales}")
         else:
@@ -158,24 +149,17 @@ def format_context_for_llm(context: dict) -> str:
     # Metadata
     metadata = context.get('metadata', {})
     if metadata:
-        lines.append(f"\nAdditional Context:")
-        for key, value in metadata.items():
-            lines.append(f"  {key}: {value}")
+        lines.append(f"\nADDITIONAL METRICS:")
+        lines.append(f"  Lead Time: {metadata.get('lead_time_days', 'N/A')} days")
+        lines.append(f"  Safety Stock: {metadata.get('safety_stock', 0):.2f} units")
+        lines.append(f"  Reorder Point: {metadata.get('reorder_point', 0):.2f} units")
+        lines.append(f"  Lead Time Demand: {metadata.get('lead_time_demand', 0):.2f} units")
+        lines.append(f"  Inventory Coverage: {metadata.get('inventory_coverage_days', 0):.1f} days")
     
     return "\n".join(lines)
 
 
 def validate_response(response: str, context: dict) -> str:
-    """
-    Validate and sanitize LLM response to ensure it doesn't invent data.
-    
-    Args:
-        response: LLM-generated response
-        context: Original context dictionary
-        
-    Returns:
-        str: Validated response
-    """
     # Check if response mentions data not in context
     sku = context.get('sku', '')
     
