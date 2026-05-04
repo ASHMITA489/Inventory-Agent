@@ -121,77 +121,6 @@ python main.py
 ```
 
 
-### Using with Your Own Data
-Update `context_example.json` with your inventory data:
-```json
-{
-  "sku": "YOUR_SKU",
-  "current_inventory": 250.0,
-  "forecast": {
-    "t+1": 100.0,
-    "t+2": 95.0,
-    ...
-  },
-  "days_to_stockout": 3,
-  "risk_level": "MEDIUM",
-  "reorder_needed": true,
-  "recommended_reorder_quantity": 150.0,
-  "daily_sales_history": [102, 95, 110, ...],
-  "metadata": {...}
-}
-```
-
-## Modules
-
-### Forecasting Module (`xgboost_7.py`)
-
-- **Features**: Lag features (1-30 days), rolling means/stds, day-based features
-- **Models**: 7 XGBoost regressors (one per forecast horizon)
-- **Output**: 7-day demand forecasts
-
-### Inventory Module (`inventory/`)
-
-- **InventoryEngine**: Core calculations (lead time demand, safety stock, reorder points)
-- **InventoryDecisionAgent**: Generates recommendations based on forecasts
-
-### Alert Module (`alerts/`)
-
-- **AlertEngine**: Risk classification, alert generation, overstock detection
-- **Risk Levels**: HIGH (≤2 days), MEDIUM (≤5 days), LOW (>5 days)
-
-### AI Agent Module (`ai_agent.py`)
-
-- **Groq LLM Integration**: Uses Llama 3.1 for natural language analysis
-- **Context-Aware**: Strictly uses provided data (no hallucination)
-- **Expert Analysis**: 3-6 sentence detailed responses
-
-## Data Format
-
-### Input Data (`sales_data.csv`)
-
-Required columns:
-- `Date`: Date of sale
-- `Product ID`: Product identifier
-- `Units Sold`: Units sold (target variable)
-- `Inventory Level`: Current inventory
-- Other features: Price, Discount, Promotion, etc.
-
-### Context Format (`context_example.json`)
-
-```json
-{
-  "sku": "string",
-  "current_inventory": float,
-  "forecast": {"t+1": float, ..., "t+7": float},
-  "days_to_stockout": int,
-  "risk_level": "LOW|MEDIUM|HIGH",
-  "reorder_needed": bool,
-  "recommended_reorder_quantity": float,
-  "daily_sales_history": [float, ...],
-  "metadata": {...}
-}
-```
-
 ## How It Helps Retail Startups
 
 ### Problems Solved
@@ -249,31 +178,4 @@ Create `.env` file:
 ```env
 GROQ_API_KEY=your_groq_api_key_here
 ```
-
-## Demo Video Guide
-
-For internship/portfolio demonstration:
-
-1. **Run**: `python main.py`
-2. **Show**: Context summary (inventory, risk, forecasts)
-3. **Ask**: Questions about risk, reordering, trends
-4. **Highlight**: AI's detailed, contextually accurate responses
-5. **Emphasize**: How it helps clothing/footwear startups
-
-**Key Talking Points:**
-- AI-powered analysis using Groq LLM
-- Demand forecasting with XGBoost
-- Automated inventory recommendations
-- Risk assessment and alerts
-- Natural language interface
-
-## Security & Git Notes
-
-- **Never commit `.env` file** (already in `.gitignore`)
-- **Keep API keys secure** - never share or commit them
-- **Model files**: The `xgb_model_t+*.json` files are large (~1-2MB each). 
-  - Option 1: Include them (repo will be larger but complete)
-  - Option 2: Exclude them (users need to train models first)
-  - To exclude: Uncomment model file rules in `.gitignore`
-
 
